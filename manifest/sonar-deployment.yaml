@@ -20,11 +20,13 @@ spec:
       initContainers:
       - name: init
         image: busybox
+        command:
+        - sysctl
+        - -w
+        - vm.max_map_count=262144
         imagePullPolicy: IfNotPresent
         securityContext:
-          sysctls:
-          - name: vm.max_map_count
-            value: 262144
+          privileged: true
       containers:
       - name: sonarqube
         image: sonarqube:7.1
