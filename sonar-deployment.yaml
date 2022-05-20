@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sonar-deployment
+  #namespace: sonar
+  labels:
+    app: sonar
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: sonar
+  template:
+    metadata:
+      labels:
+        app: sonar
+    spec:
+      initContainers:
+      - name: init
+        image: busybox
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          sysctls:
+          - name: vm.max_map_count
+            value: 262144
+      containers:
+      - name: sonarqube
+        image: sonarqube:8.9.1-community
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 9000
+        envFrom:
+        - configMapRef:
+            name: sonar-cm
+        volumeMounts:
+        - name: sonar-pvc
+          mountPath: "/opt/sonarqube/data/"
+          subPath: data
+        - name: sonar-pvc
+          mountPath: "/opt/sonarqube/extensions/"
+          subPath: extensions
+        resources:
+          requests:
+            cpu: 500m
+            memory: "1024Mi"
+          limits:
+            cpu: 1000m
+            memory: "2048Mi"
+        readinessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        livenessProbe:
+          tcpSocket:
+            port: 9000
+          initialDelaySeconds: 15
+          periodSeconds: 20
+      volumes:
+      - name: sonar-pvc
+        persistentVolumeClaim:
+          claimName: sonar-pvc
