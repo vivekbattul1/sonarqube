@@ -27,7 +27,7 @@ spec:
             value: 262144
       containers:
       - name: sonarqube
-        image: sonarqube:8.9.1-community
+        image: sonarqube:7.1
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 9000
